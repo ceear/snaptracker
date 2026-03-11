@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  snaptracker:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required. Set it in your .env file}
+      DB_PATH: /data/snaptracker.db
+      IMAGE_ADMIN_PATH: /images/admin
+      IMAGE_UPLOADS_PATH: /images/uploads
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-50}
+    volumes:
+      # RO mount: your snapshot folder (admin images)
+      - ${SNAPSHOTS_PATH:-./snapshots}:/images/admin:ro
+      # RW mount: contributor upload storage (persistent named volume)
+      - uploads_data:/images/uploads
+      # SQLite database persistence
+      - db_data:/data
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  db_data:
