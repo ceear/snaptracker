@@ -6,6 +6,8 @@ export function useImages(params = {}) {
     queryKey: ['images', params],
     queryFn: () => imagesApi.getImages(params),
     keepPreviousData: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -22,7 +24,9 @@ export function useImageDates(owner) {
     queryKey: ['imageDates', owner],
     queryFn: () => imagesApi.getImageDates(owner),
     enabled: !!owner,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -30,6 +34,8 @@ export function useOwners() {
   return useQuery({
     queryKey: ['owners'],
     queryFn: imagesApi.getOwners,
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 }

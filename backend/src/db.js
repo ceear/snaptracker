@@ -159,6 +159,7 @@ function initStmts() {
   `),
   updateThumbnailPath: db.prepare('UPDATE image_cache SET thumbnail_path = ? WHERE id = ?'),
   getImageById: db.prepare('SELECT * FROM image_cache WHERE id = ?'),
+  getFilepathsByOwner: db.prepare('SELECT filepath FROM image_cache WHERE folder_owner = ?'),
   deleteImageByPath: db.prepare('DELETE FROM image_cache WHERE filepath = ?'),
   deleteImagesByOwner: db.prepare('DELETE FROM image_cache WHERE folder_owner = ?'),
 

@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import chokidar from 'chokidar';
 import sharp from 'sharp';
 import pLimit from 'p-limit';
 import { stmts } from './db.js';
@@ -113,62 +112,82 @@ export async function scanFolder(owner, folderPath) {
     .filter(f => IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase()))
     .map(f => path.join(folderPath, f));
 
+  const scannedPaths = new Set(imagePaths);
   await Promise.all(imagePaths.map(fp => limit(() => processFile(owner, fp))));
+
+  // Remove DB entries for images that no longer exist on disk
+  const dbRows = stmts.getFilepathsByOwner.all(owner);
+  let pruned = 0;
+  for (const { filepath } of dbRows) {
+    if (!scannedPaths.has(filepath)) {
+      stmts.deleteImageByPath.run(filepath);
+      pruned++;
+    }
+  }
+  if (pruned > 0) logger.info(`Pruned ${pruned} stale DB entries for ${owner}`);
+
   logger.info(`Scan complete for ${owner}: ${imagePaths.length} images processed`);
 }
 
-// ── Filesystem watcher ────────────────────────────────────────────────────────
+// ── Periodic reconciliation ───────────────────────────────────────────────────
 
-export function startWatcher(adminPath, uploadsPath) {
-  const watchPaths = [];
-  if (fs.existsSync(adminPath)) watchPaths.push(adminPath);
-  if (fs.existsSync(uploadsPath)) watchPaths.push(uploadsPath);
+async function reconcileFolder(owner, folderPath) {
+  if (!fs.existsSync(folderPath)) return;
 
-  if (watchPaths.length === 0) {
-    logger.warn('No image directories found to watch');
+  let files;
+  try {
+    files = fs.readdirSync(folderPath);
+  } catch {
     return;
   }
 
-  const watcher = chokidar.watch(watchPaths, {
-    ignored: /(^|[\/\\])\../,
-    persistent: true,
-    ignoreInitial: true, // initial scan done separately
-    awaitWriteFinish: { stabilityThreshold: 2000, pollInterval: 500 },
-  });
+  const diskPaths = new Set(
+    files
+      .filter(f => IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase()))
+      .map(f => path.join(folderPath, f))
+  );
 
-  watcher.on('add', async (filepath) => {
-    const owner = resolveOwner(filepath, adminPath, uploadsPath);
-    if (owner) {
-      logger.debug(`New file detected: ${filepath} (owner: ${owner})`);
-      await processFile(owner, filepath);
+  const dbRows = stmts.getFilepathsByOwner.all(owner);
+  const dbPaths = new Set(dbRows.map(r => r.filepath));
+
+  // Process only new files (not yet in DB)
+  const toAdd = [...diskPaths].filter(p => !dbPaths.has(p));
+  if (toAdd.length > 0) {
+    const limit = pLimit(4);
+    await Promise.all(toAdd.map(fp => limit(() => processFile(owner, fp))));
+    logger.info(`Reconcile: added ${toAdd.length} new image(s) for ${owner}`);
+  }
+
+  // Remove entries for deleted files
+  let pruned = 0;
+  for (const p of dbPaths) {
+    if (!diskPaths.has(p)) {
+      stmts.deleteImageByPath.run(p);
+      pruned++;
     }
-  });
-
-  watcher.on('unlink', (filepath) => {
-    logger.debug(`File removed: ${filepath}`);
-    stmts.deleteImageByPath.run(filepath);
-  });
-
-  watcher.on('error', err => logger.error('Watcher error:', err));
-
-  logger.info('Filesystem watcher started');
+  }
+  if (pruned > 0) logger.info(`Reconcile: pruned ${pruned} stale entry(s) for ${owner}`);
 }
 
-function resolveOwner(filepath, adminPath, uploadsPath) {
-  const normalized = path.normalize(filepath);
-  const normalizedAdmin = path.normalize(adminPath);
-  const normalizedUploads = path.normalize(uploadsPath);
+export function startPeriodicScan(adminPath, uploadsPath) {
+  const intervalMs = parseInt(process.env.SCAN_INTERVAL_MS || '10000', 10);
 
-  if (normalized.startsWith(normalizedAdmin + path.sep) ||
-      normalized.startsWith(normalizedAdmin + '/')) {
-    return 'admin';
-  }
-  if (normalized.startsWith(normalizedUploads + path.sep) ||
-      normalized.startsWith(normalizedUploads + '/')) {
-    // uploads/<folder_name>/image.jpg → folder_name is the owner
-    const rel = path.relative(normalizedUploads, normalized);
-    const parts = rel.split(path.sep);
-    return parts[0] || null;
-  }
-  return null;
+  const tick = async () => {
+    try {
+      await reconcileFolder('admin', adminPath);
+      if (fs.existsSync(uploadsPath)) {
+        const subfolders = fs.readdirSync(uploadsPath, { withFileTypes: true })
+          .filter(d => d.isDirectory())
+          .map(d => d.name);
+        for (const folder of subfolders) {
+          await reconcileFolder(folder, path.join(uploadsPath, folder));
+        }
+      }
+    } catch (err) {
+      logger.error('Periodic scan error:', err);
+    }
+  };
+
+  setInterval(tick, intervalMs);
+  logger.info(`Periodic folder scan started (interval: ${intervalMs}ms)`);
 }

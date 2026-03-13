@@ -10,7 +10,7 @@ import fs from 'fs';
 
 import logger from './logger.js';
 import { init as initDb } from './db.js';
-import { scanFolder, startWatcher } from './imageScanner.js';
+import { scanFolder, startPeriodicScan } from './imageScanner.js';
 
 import authRoutes from './routes/auth.js';
 import imageRoutes from './routes/images.js';
@@ -110,8 +110,8 @@ async function start() {
     }
   }
 
-  // Start filesystem watcher
-  startWatcher(ADMIN_PATH, UPLOADS_PATH);
+  // Start periodic folder scan
+  startPeriodicScan(ADMIN_PATH, UPLOADS_PATH);
 
   app.listen(PORT, () => {
     logger.info(`SnapTracker backend running on port ${PORT}`);
