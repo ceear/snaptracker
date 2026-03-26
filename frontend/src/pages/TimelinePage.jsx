@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { format, fromUnixTime } from 'date-fns';
 import { useImages, useImageDates } from '../hooks/useImages.js';
 import { useTimeline } from '../hooks/useTimeline.js';
@@ -45,6 +45,19 @@ export default function TimelinePage() {
 
   const { data: datesData } = useImageDates(owner);
   const dates = datesData?.dates || [];
+
+  // Detect phone landscape vs desktop landscape — CSS landscape: variant fires on both,
+  // but we only want compact layout on phones (height ≤ 500px in landscape)
+  const [isPhoneLandscape, setIsPhoneLandscape] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches
+  );
+  useEffect(() => {
+    const mql = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
+    const handler = (e) => setIsPhoneLandscape(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const handleSliderChange = useCallback((e) => {
     goTo(parseInt(e.target.value, 10));
@@ -140,9 +153,9 @@ export default function TimelinePage() {
             <CalendarIcon />
           </button>
 
-          {/* Landscape compact controls overlay — replaces the slider section below */}
-          {images.length > 0 && (
-            <div className="hidden landscape:flex absolute bottom-0 left-0 right-0 z-10
+          {/* Landscape compact controls overlay — replaces the slider section below (phone only) */}
+          {isPhoneLandscape && images.length > 0 && (
+            <div className="flex absolute bottom-0 left-0 right-0 z-10
                             items-center gap-2 px-3 py-2
                             bg-surface-950/80 backdrop-blur-sm">
               <button
@@ -184,8 +197,8 @@ export default function TimelinePage() {
         )}
       </div>
 
-      {/* Slider controls — portrait only */}
-      <div className="border-t border-surface-800 bg-surface-900/80 backdrop-blur-sm pt-3 landscape:hidden">
+      {/* Slider controls — hidden only on phone landscape */}
+      {!isPhoneLandscape && <div className="border-t border-surface-800 bg-surface-900/80 backdrop-blur-sm pt-3">
         <TimeSlider
           images={images}
           currentIndex={currentIndex}
@@ -195,16 +208,16 @@ export default function TimelinePage() {
           speed={speed}
           onSpeedChange={setSpeed}
         />
-      </div>
+      </div>}
 
-      {/* Thumbnail strip — portrait only */}
-      <div className="border-t border-surface-800 bg-surface-950 h-16 overflow-hidden landscape:hidden">
+      {/* Thumbnail strip — hidden only on phone landscape */}
+      {!isPhoneLandscape && <div className="border-t border-surface-800 bg-surface-950 h-16 overflow-hidden">
         <ThumbnailStrip
           images={images}
           currentIndex={currentIndex}
           onSelect={goTo}
         />
-      </div>
+      </div>}
 
       {/* Calendar bottom sheet — mobile only */}
       {showCalendar && (
