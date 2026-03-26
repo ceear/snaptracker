@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useImages } from '../hooks/useImages.js';
 import { useUIStore } from '../store/ui.js';
 import { useAuthStore } from '../store/auth.js';
@@ -25,9 +25,10 @@ export default function GalleryPage() {
   const images = data?.images || [];
   const totalPages = data?.pages || 1;
   const total = data?.total || 0;
+  const imageIds = useMemo(() => images.map(img => img.id), [images]);
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
+    <div className="h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-y-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -78,8 +79,8 @@ export default function GalleryPage() {
 
         {!isLoading && images.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {images.map(img => (
-              <ThumbnailCard key={img.id} image={img} />
+            {images.map((img, index) => (
+              <ThumbnailCard key={img.id} image={img} imageIds={imageIds} imageIndex={index} />
             ))}
           </div>
         )}

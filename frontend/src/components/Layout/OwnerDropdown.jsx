@@ -11,10 +11,10 @@ export default function OwnerDropdown({ owners }) {
   const currentOwner = owners.find(o => o.folder_name === current) || owners[0];
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
         <button className="btn-ghost text-sm flex items-center gap-1.5 px-3 py-1.5">
-          <span className="w-2 h-2 rounded-full bg-accent-500 shrink-0" />
+          <UsersIcon className="w-4 h-4 text-surface-400 shrink-0" />
           <span className="max-w-24 truncate">{currentOwner?.username || 'Select'}</span>
           <ChevronDown />
         </button>
@@ -22,12 +22,14 @@ export default function OwnerDropdown({ owners }) {
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          className="z-50 min-w-40 rounded-lg bg-surface-850 border border-surface-700 shadow-xl
+          className="z-50 min-w-44 rounded-lg bg-surface-850 border border-surface-700 shadow-xl
                      py-1 animate-in fade-in-0 zoom-in-95"
           sideOffset={6}
           align="end"
+          collisionPadding={8}
         >
-          <DropdownMenu.Label className="px-3 py-1.5 text-[11px] font-medium text-surface-500 uppercase tracking-wide">
+          <DropdownMenu.Label className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-surface-500 uppercase tracking-wide">
+            <FolderIcon className="w-3.5 h-3.5" />
             View folder
           </DropdownMenu.Label>
 
@@ -58,6 +60,24 @@ export default function OwnerDropdown({ owners }) {
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
+  );
+}
+
+function UsersIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  );
+}
+
+function FolderIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+    </svg>
   );
 }
 

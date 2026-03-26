@@ -20,7 +20,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">📸</div>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-surface-800 border border-surface-700
+                          flex items-center justify-center">
+            <CameraIcon className="w-8 h-8 text-surface-300" />
+          </div>
           <h1 className="text-2xl font-semibold text-surface-100">SnapTracker</h1>
           <p className="text-surface-400 text-sm mt-1">Time-lapse image viewer</p>
         </div>
@@ -66,5 +69,15 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+function CameraIcon({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+      <circle cx="12" cy="13" r="4" strokeWidth={1.5} />
+    </svg>
   );
 }

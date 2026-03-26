@@ -16,7 +16,7 @@ export default function AdminPage() {
   const users = data?.users || [];
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] overflow-y-auto">
+    <div className="h-[calc(100dvh-7rem)] md:h-[calc(100dvh-3.5rem)] overflow-y-auto">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-8">
         <div>
           <h2 className="text-lg font-semibold text-surface-100">User Management</h2>
@@ -242,14 +242,15 @@ function UserRow({ user, isSelf, onRefresh }) {
           <button
             onClick={() => togglePublicMutation.mutate()}
             disabled={togglePublicMutation.isPending}
-            className={`relative w-10 h-5 rounded-full transition-colors ${
-              user.is_public ? 'bg-accent-500' : 'bg-surface-700'
-            }`}
+            className={`relative inline-flex w-11 h-6 rounded-full transition-colors duration-200
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500
+                        ${user.is_public ? 'bg-accent-500' : 'bg-surface-700'}
+                        ${togglePublicMutation.isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             aria-label={user.is_public ? 'Set to private' : 'Set to public'}
           >
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-              user.is_public ? 'translate-x-5' : 'translate-x-0.5'
-            }`} />
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm
+                              transition-transform duration-200
+                              ${user.is_public ? 'translate-x-5' : 'translate-x-0'}`} />
           </button>
         )}
       </td>

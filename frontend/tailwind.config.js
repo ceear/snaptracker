@@ -31,6 +31,10 @@ export default {
       transitionTimingFunction: {
         'snap': 'cubic-bezier(0.23, 1, 0.32, 1)',
       },
+      screens: {
+        // Phone landscape: height ≤ 500px (excludes tablets in landscape)
+        landscape: { raw: '(orientation: landscape) and (max-height: 500px)' },
+      },
     },
   },
   plugins: [
