@@ -4,7 +4,7 @@ import { clsx } from 'clsx';
 import { useUIStore } from '../../store/ui.js';
 import { getThumbUrl } from '@api/images.js';
 
-export default function ThumbnailCard({ image, isActive = false }) {
+export default function ThumbnailCard({ image, isActive = false, imageIds = [], imageIndex = 0 }) {
   const { ref, inView } = useInView({ triggerOnce: true, rootMargin: '100px' });
   const openModal = useUIStore(s => s.openModal);
 
@@ -13,7 +13,7 @@ export default function ThumbnailCard({ image, isActive = false }) {
   return (
     <div
       ref={ref}
-      onClick={() => openModal(image.id)}
+      onClick={() => openModal(image.id, imageIds, imageIndex)}
       className={clsx(
         'group relative cursor-pointer rounded-lg overflow-hidden bg-surface-900',
         'border transition-all duration-150',

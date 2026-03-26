@@ -7,6 +7,10 @@
     box-sizing: border-box;
   }
 
+  html, body {
+    overflow-x: hidden;
+  }
+
   html {
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -63,6 +67,11 @@
   .label {
     @apply block text-xs font-medium text-surface-400 mb-1.5;
   }
+}
+
+/* Safe-area inset utility for notched phones */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Smooth image fade transition */

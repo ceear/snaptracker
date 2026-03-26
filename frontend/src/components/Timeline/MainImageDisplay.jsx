@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { format, fromUnixTime } from 'date-fns';
 import { getFullUrl } from '@api/images.js';
-import { useUIStore } from '../../store/ui.js';
 
 const PRELOAD_AHEAD = 8;
 const PRELOAD_BEHIND = 2;
 
 export default function MainImageDisplay({ image, images = [], currentIndex = 0 }) {
-  const openModal = useUIStore(s => s.openModal);
-
   // Always keep the last successfully loaded src visible — never goes blank
   const [displayedSrc, setDisplayedSrc] = useState(null);
   const latestId = useRef(null); // prevent stale loads from overwriting current
@@ -57,13 +54,12 @@ export default function MainImageDisplay({ image, images = [], currentIndex = 0 
   }
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-surface-950 group">
+    <div className="relative w-full h-full flex items-center justify-center bg-surface-950">
       {displayedSrc ? (
         <img
           src={displayedSrc}
           alt={image.filename}
-          onClick={() => openModal(image.id)}
-          className="max-w-full max-h-full object-contain cursor-zoom-in select-none"
+          className="max-w-full max-h-full object-contain select-none"
           draggable={false}
         />
       ) : (
@@ -80,13 +76,6 @@ export default function MainImageDisplay({ image, images = [], currentIndex = 0 
           <p className="text-xs text-surface-400">
             {format(fromUnixTime(image.captured_at), 'HH:mm:ss')}
           </p>
-        </div>
-      </div>
-
-      {/* Zoom hint */}
-      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <div className="bg-surface-950/70 backdrop-blur-sm rounded-lg px-2 py-1">
-          <p className="text-xs text-surface-400">Click to zoom</p>
         </div>
       </div>
     </div>
