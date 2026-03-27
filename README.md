@@ -3,7 +3,7 @@
 
 A self-hosted web app for viewing time-lapse snapshots. Mount a folder of camera images and browse them chronologically in a gallery or scrub through them on an animated timeline. Runs as a single Docker container.
 
-**[Live Demo →](https://your-username.github.io/snaptracker)** *(auto-deployed from `main` branch with mock data)*
+**[Live Demo →](https://ceear.github.io/snaptracker)** *(auto-deployed from `main` branch with mock data)*
 
 ---
 
@@ -23,7 +23,7 @@ A self-hosted web app for viewing time-lapse snapshots. Mount a folder of camera
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/your-username/snaptracker
+git clone https://github.com/ceear/snaptracker
 cd snaptracker
 cp .env.example .env
 ```
@@ -59,6 +59,76 @@ Open [http://localhost:3000](http://localhost:3000). On first start, **check the
 ```
 
 Log in and change the password via the Admin panel.
+
+---
+
+## Deployment with Pre-built Image
+
+Every GitHub Release automatically builds a Docker image and publishes it to the
+**GitHub Container Registry (GHCR)**. You don't need to clone the repository or install Node.js.
+
+### Available image tags
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Most recent stable release |
+| `1.2.3` | Exact version |
+| `1.2` | Latest patch of that minor version |
+
+### Steps
+
+**1. Create `.env`**
+
+```
+JWT_SECRET=your-very-long-random-secret-string-here
+SNAPSHOTS_PATH=./snapshots
+PORT=3000
+CORS_ORIGIN=http://localhost:3000
+```
+
+**2. Create `docker-compose.yml`**
+
+```yaml
+version: "3.9"
+
+services:
+  snaptracker:
+    image: ghcr.io/YOUR_GITHUB_USERNAME/snaptracker:latest
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      DB_PATH: /data/snaptracker.db
+      IMAGE_ADMIN_PATH: /images/admin
+      IMAGE_UPLOADS_PATH: /images/uploads
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-50}
+    volumes:
+      - ${SNAPSHOTS_PATH:-./snapshots}:/images/admin:ro
+      - uploads_data:/images/uploads
+      - db_data:/data
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  db_data:
+```
+
+> Replace `YOUR_GITHUB_USERNAME` with your GitHub username (or organisation name).
+
+**3. Start**
+
+```bash
+mkdir snapshots   # put your images here
+docker compose up -d
+docker compose logs -f   # check for admin credentials on first start
+```
+
+> **Note:** After the first release the package is private by default. To make it publicly
+> pullable go to `github.com/YOUR_GITHUB_USERNAME/snaptracker/packages` →
+> **Package settings → Change visibility → Public**.
 
 ---
 
@@ -216,7 +286,7 @@ Every push to `main` automatically builds and deploys a demo version to GitHub P
 To enable it:
 1. Push the repo to GitHub
 2. Go to **Settings → Pages** → set source to **Deploy from a branch** → select `gh-pages`
-3. The demo URL will be: `https://your-username.github.io/snaptracker`
+3. The demo URL will be: `https://ceear.github.io/snaptracker`
 
 The demo uses mock data (no real images, no backend). Any login credentials are accepted.
 
